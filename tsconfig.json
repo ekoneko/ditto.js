@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "strictNullChecks": false,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "declaration": true,
+    "lib": ["esnext"],
+    "outDir": "dist",
+    "allowJs": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "esnext",
+    "noImplicitAny": true
+  }
+}
