@@ -1,37 +1,39 @@
 import * as vm from 'vm'
-import * as path from 'path';
+import * as path from 'path'
 import { Application, Request, Response, NextFunction } from 'express'
-import { pathToRegexp } from 'path-to-regexp';
-import { Config } from '../types/config';
-import { Rule } from '../types/rule';
-import fetch, { RequestInit } from 'node-fetch';
+import { pathToRegexp } from 'path-to-regexp'
+import { Config } from '../types/config'
+import { Rule } from '../types/rule'
+import fetch, { RequestInit } from 'node-fetch'
 
 function createMatchRule(method: string, pathname: string) {
-  method = method.toUpperCase();
+  method = method.toUpperCase()
   return function matchRule(rule: Rule) {
     const [method, path] = rule.match
     if (method !== '*' && method.toUpperCase() !== method) {
-      return false;
+      return false
     }
-    const reg = pathToRegexp(path);
-    return reg.test(pathname);
-  };
+    const reg = pathToRegexp(path)
+    return reg.test(pathname)
+  }
 }
 
 function joinUrl(prefix: string, suffix: string) {
-  const flag = prefix[prefix.length - 1] === "/" || suffix[0] === "/" ? "/" : "";
-  return prefix + flag + suffix;
+  const flag = prefix[prefix.length - 1] === '/' || suffix[0] === '/' ? '/' : ''
+  return prefix + flag + suffix
 }
 
 function createRequest(req: Request, config: Config) {
   return function request(url: string, init?: RequestInit) {
-    if (!url.includes("://")) {
+    if (!url.includes('://')) {
       req.originalUrl
-      url = joinUrl(String(config.proxy.target), url);
+      url = joinUrl(String(config.proxy.target), url)
     }
-    const cookie = req.cookies && Object.keys(req.cookies).reduce((pre, cur) => {
-      return pre + `${cur}=${encodeURI(req.cookies[cur])}; `;
-    }, "");
+    const cookie =
+      req.cookies &&
+      Object.keys(req.cookies).reduce((pre, cur) => {
+        return pre + `${cur}=${encodeURI(req.cookies[cur])}; `
+      }, '')
     return fetch(url, {
       ...config.proxy,
       ...init,
@@ -39,8 +41,8 @@ function createRequest(req: Request, config: Config) {
         Cookie: cookie,
         ...init?.headers,
       },
-    });
-  };
+    })
+  }
 }
 
 export async function createRuleProxy(app: Application, config: Config) {
@@ -51,7 +53,9 @@ export async function createRuleProxy(app: Application, config: Config) {
     if (matchedRule?.callback) {
       try {
         const context = vm.createContext({
-          req, res, next,
+          req,
+          res,
+          next,
           request: createRequest(req, config),
           microtaskMode: true,
           globalContext: config.globalContext,

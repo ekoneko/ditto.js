@@ -1,5 +1,5 @@
-import { ServerOptions } from 'http-proxy';
-import { Rule } from './rule';
+import { ServerOptions } from 'http-proxy'
+import { Rule } from './rule'
 
 export interface Config {
   proxy: ServerOptions

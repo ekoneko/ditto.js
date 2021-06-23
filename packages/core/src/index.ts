@@ -1,6 +1,6 @@
 import * as express from 'express'
-import * as cookieParser from "cookie-parser";
-import * as bodyParser from "body-parser";
+import * as cookieParser from 'cookie-parser'
+import { json as bodyParserJson } from 'body-parser'
 import { getConfig } from './config'
 import './middleware/commonProxy'
 import { createRuleProxy } from './middleware/ruleProxy'
@@ -17,9 +17,9 @@ export default async function ({ configPath, port = DEFAULT_PORT }: Options) {
   const app = express()
   const config = getConfig(configPath)
 
-  app.use(bodyParser.json({ type: ["application/json", "application/+*json"] }));
-  app.use(cookieParser());
+  app.use(bodyParserJson({ type: ['application/json', 'application/+*json'] }))
+  app.use(cookieParser())
   app.use(await createRuleProxy(app, config))
-  app.use(await createCommonProxy(app, config));
+  app.use(await createCommonProxy(app, config))
   app.listen(port)
 }

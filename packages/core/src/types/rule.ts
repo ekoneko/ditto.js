@@ -2,7 +2,7 @@ type Method = string
 type Path = string
 
 export interface Rule {
-  match: [Method, Path],
+  match: [Method, Path]
   callback: Function
   context?: any
 }
