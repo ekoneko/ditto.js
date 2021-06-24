@@ -1,8 +1,8 @@
 import * as vm from 'vm'
-import * as path from 'path'
 import { Application, Request, Response, NextFunction } from 'express'
 import { pathToRegexp } from 'path-to-regexp'
-import { Config } from '../types/config'
+import { Config } from '../config'
+import { Config as IConfig } from '../types/config'
 import { Rule } from '../types/rule'
 import fetch, { RequestInit } from 'node-fetch'
 
@@ -23,7 +23,7 @@ function joinUrl(prefix: string, suffix: string) {
   return prefix + flag + suffix
 }
 
-function createRequest(req: Request, config: Config) {
+function createRequest(req: Request, config: IConfig) {
   return function request(url: string, init?: RequestInit) {
     if (!url.includes('://')) {
       req.originalUrl
@@ -32,22 +32,24 @@ function createRequest(req: Request, config: Config) {
     const cookie =
       req.cookies &&
       Object.keys(req.cookies).reduce((pre, cur) => {
-        return pre + `${cur}=${encodeURI(req.cookies[cur])}; `
+        return pre + `${cur}=${encodeURIComponent(req.cookies[cur])}; `
       }, '')
     return fetch(url, {
       ...config.proxy,
       ...init,
       headers: {
         Cookie: cookie,
+        ...config.proxy.headers,
         ...init?.headers,
       },
     })
   }
 }
 
-export async function createRuleProxy(app: Application, config: Config) {
-  const rules = config.rules.reverse()
+export async function createRuleProxy(app: Application, configReader: Config) {
   return function (req: Request, res: Response, next: NextFunction) {
+    const config = configReader.get()
+    const rules = config.rules.reverse()
     const matchRule = createMatchRule(req.method, req.path)
     const matchedRule = rules.find(matchRule)
     if (matchedRule?.callback) {

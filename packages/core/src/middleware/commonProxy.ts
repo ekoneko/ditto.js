@@ -1,8 +1,8 @@
 import querystring from 'querystring'
 import { createProxyMiddleware } from 'http-proxy-middleware'
 import { ClientRequest } from 'http'
-import { Application, Request, Response } from 'express'
-import { Config } from '../types/config'
+import { Application, NextFunction, Request, Response } from 'express'
+import { Config } from '../config'
 
 function onProxyReq(proxyReq: ClientRequest, req: Request, res: Response) {
   if (!req.body || !Object.keys(req.body).length) {
@@ -22,8 +22,15 @@ function onProxyReq(proxyReq: ClientRequest, req: Request, res: Response) {
 }
 
 export async function createCommonProxy(app: Application, config: Config) {
-  return createProxyMiddleware({
+  let handler = createProxyMiddleware({
     onProxyReq,
-    ...config.proxy,
+    ...config.get().proxy,
   })
+  config.on('change', () => {
+    handler = createProxyMiddleware({
+      onProxyReq,
+      ...config.get().proxy,
+    })
+  })
+  return (req: Request, res: Response, next: NextFunction) => handler(req, res, next)
 }
