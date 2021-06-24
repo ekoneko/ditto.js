@@ -1,5 +1,5 @@
 {
-  "name": "@ditto/core",
+  "name": "@ekoneko/ditto",
   "version": "0.0.0",
   "description": "",
   "author": "ekoneko9 <arzusyume@gmail.com>",
@@ -7,10 +7,11 @@
   "license": "MIT",
   "main": "lib/index.js",
   "bin": {
-    "ditto": "./cli"
+    "ditto": "./cli.js"
   },
   "files": [
-    "lib"
+    "lib",
+    "cli.js"
   ],
   "scripts": {
     "start": "NODE_ENV=development ts-node-dev --ignore-watch \"(/data/)\" src/cli.ts",
@@ -36,5 +37,9 @@
     "morgan": "^1.10.0",
     "node-fetch": "^2.6.1",
     "path-to-regexp": "^6.2.0"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   }
 }
