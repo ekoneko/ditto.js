@@ -94,3 +94,7 @@ request(url: string, init?: RequestInit) => Response
 将日志输出至 ditto 执行进程中。(沙箱中的 console.log 等日志会被丢弃)
 
 ## TODO
+
+- [ ] 支持从 open-api / swagger 生成规则
+- [ ] 支持 websocket
+- [ ] 支持 SSE
