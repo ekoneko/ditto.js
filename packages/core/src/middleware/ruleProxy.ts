@@ -60,7 +60,9 @@ export async function createRuleProxy(app: Application, configReader: Config) {
           next,
           request: createRequest(req, config),
           microtaskMode: true,
-          globalContext: config.globalContext,
+          // Think: required namespace?
+          // namespace will cause difficult to use module in every shared functions
+          ...config.globalContext,
           context: matchedRule.context,
           // TODO: custom log
           log: console.log,

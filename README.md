@@ -29,7 +29,6 @@ module.exports = {
       match: ['GET', '/api/0'],
       callback: (req, res) => {
         const { prefix } = context
-        const { chance } = globalContext
         res.send(`${prefix}${chance.name()}`)
       },
       context: { prefix: 'name: ' },
@@ -57,6 +56,10 @@ module.exports = {
 规则匹配条件，格式为 `[Method, Path]`
 
 `Path` 由 `path-to-regexp` 解析。后定义的规则会优先响应。
+
+#### rule.context
+
+向 callback 注入上下文， 拥有命名空间 `context`
 
 #### rule.callback
 

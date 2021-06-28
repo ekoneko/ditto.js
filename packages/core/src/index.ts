@@ -6,7 +6,7 @@ import './middleware/commonProxy'
 import { createRuleProxy } from './middleware/ruleProxy'
 import { createCommonProxy } from './middleware/commonProxy'
 
-const DEFAULT_PORT = 1552
+const DEFAULT_PORT = 1551
 
 export interface Options {
   configPath: string
