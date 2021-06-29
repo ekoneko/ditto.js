@@ -9,8 +9,8 @@ import fetch, { RequestInit } from 'node-fetch'
 function createMatchRule(method: string, pathname: string) {
   method = method.toUpperCase()
   return function matchRule(rule: Rule) {
-    const [method, path] = rule.match
-    if (method !== '*' && method.toUpperCase() !== method) {
+    const [ruleMethod, path] = rule.match
+    if (ruleMethod !== '*' && (ruleMethod.toUpperCase() !== method)) {
       return false
     }
     const reg = pathToRegexp(path)
@@ -26,7 +26,6 @@ function joinUrl(prefix: string, suffix: string) {
 function createRequest(req: Request, config: IConfig) {
   return function request(url: string, init?: RequestInit) {
     if (!url.includes('://')) {
-      req.originalUrl
       url = joinUrl(String(config.proxy.target), url)
     }
     const cookie =
