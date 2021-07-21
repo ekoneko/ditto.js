@@ -26,13 +26,20 @@ export class Config extends EventEmitter {
       debug(`unwatch file ${file}`)
       unwatchFile(file)
     })
-    watchFile(this.configPath, this.handleFileChange.bind(this, this.configPath))
-    this.watchList = require.cache[this.configPath].children.map(({ id }) => id)
-    this.watchList.forEach(file => {
-      debug(`watch file ${file}`)
-      watchFile(file, this.handleFileChange.bind(this, file))
+    this.watchList = []
+    this.watchFileAndRelationship(this.configPath)
+  }
+
+  private watchFileAndRelationship(target: string) {
+    debug(`watch file ${target}`)
+    this.watchList.push(target)
+    watchFile(target, this.handleFileChange.bind(this, target))
+    const watchList = require.cache[target].children.map(({ id }) => id)
+    watchList.forEach(file => {
+      this.watchFileAndRelationship(file)
     })
   }
+
   private handleFileChange = (file: string) => {
     debug(`config file change ${file}`)
     delete require.cache[this.configPath]
