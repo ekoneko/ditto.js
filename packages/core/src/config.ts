@@ -34,7 +34,7 @@ export class Config extends EventEmitter {
     debug(`watch file ${target}`)
     this.watchList.push(target)
     watchFile(target, this.handleFileChange.bind(this, target))
-    const watchList = require.cache[target].children.map(({ id }) => id)
+    const watchList = (require.cache[target]?.children ?? []).map(({ id }) => id)
     watchList.forEach(file => {
       this.watchFileAndRelationship(file)
     })
@@ -44,10 +44,23 @@ export class Config extends EventEmitter {
     debug(`config file change ${file}`)
     delete require.cache[this.configPath]
     if (file !== this.configPath) {
-      delete require.cache[file]
+      this.deleteCache(file)
     }
     this.config = require(this.configPath)
     this.subscribe()
     this.emit('change')
+  }
+
+  private deleteCache(file: string, stack = 0) {
+    if (stack > 100) {
+      throw new Error('delete cache too deep')
+    }
+    const cache = require.cache[file]
+    if (cache) {
+      delete require.cache[file]
+      if (cache.parent?.id) {
+        this.deleteCache(cache.parent.id, stack++)
+      }
+    }
   }
 }
