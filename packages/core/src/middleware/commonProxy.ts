@@ -1,5 +1,5 @@
 import querystring from 'querystring'
-import { createProxyMiddleware } from 'http-proxy-middleware'
+import { createProxyMiddleware, Options } from 'http-proxy-middleware'
 import { ClientRequest } from 'http'
 import { Application, NextFunction, Request, Response } from 'express'
 import { Config } from '../config'
@@ -22,15 +22,14 @@ function onProxyReq(proxyReq: ClientRequest, req: Request, res: Response) {
 }
 
 export async function createCommonProxy(app: Application, config: Config) {
-  let handler = createProxyMiddleware({
+  const params: Options = {
+    logLevel: 'error',
     onProxyReq,
     ...config.get().proxy,
-  })
+  }
+  let handler = createProxyMiddleware(params)
   config.on('change', () => {
-    handler = createProxyMiddleware({
-      onProxyReq,
-      ...config.get().proxy,
-    })
+    handler = createProxyMiddleware(params)
   })
   return (req: Request, res: Response, next: NextFunction) => handler(req, res, next)
 }
