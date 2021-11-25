@@ -1,4 +1,5 @@
 import { watchFile, unwatchFile } from 'fs'
+import * as path from 'path'
 import createDebug from 'debug'
 import * as EventEmitter from 'events'
 import { Config as IConfig } from './types/config'
@@ -36,6 +37,10 @@ export class Config extends EventEmitter {
     watchFile(target, this.handleFileChange.bind(this, target))
     const watchList = (require.cache[target]?.children ?? []).map(({ id }) => id)
     watchList.forEach(file => {
+      if (file.includes(path.join(path.sep, 'node_modules', path.sep))) {
+        debug(`ignore watch ${file}`)
+        return
+      }
       this.watchFileAndRelationship(file)
     })
   }
