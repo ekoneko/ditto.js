@@ -1,10 +1,11 @@
-import * as vm from 'vm'
-import { Application, Request, Response, NextFunction } from 'express'
-import { pathToRegexp } from 'path-to-regexp'
-import { Config } from '../config'
-import { Config as IConfig } from '../types/config'
-import { Rule } from '../types/rule'
-import fetch, { RequestInit } from 'node-fetch'
+import { Application, NextFunction, Request, Response } from 'express';
+import fetch, { RequestInit } from 'node-fetch';
+import { pathToRegexp } from 'path-to-regexp';
+import * as vm from 'vm';
+
+import { Config } from '../config';
+import { Config as IConfig } from '../types/config';
+import { Rule } from '../types/rule';
 
 function createMatchRule(method: string, pathname: string) {
   method = method.toUpperCase()
@@ -24,9 +25,10 @@ function joinUrl(prefix: string, suffix: string) {
 }
 
 function createRequest(req: Request, config: IConfig) {
+  const { globalRequestParams } = config
   return function request(url: string, init?: RequestInit) {
     if (!url.includes('://')) {
-      url = joinUrl(String(config.proxy.target), url)
+      url = globalRequestParams?.baseUrl ? joinUrl(globalRequestParams.baseUrl, url) : url
     }
     const cookie =
       req.cookies &&
@@ -34,11 +36,10 @@ function createRequest(req: Request, config: IConfig) {
         return pre + `${cur}=${encodeURIComponent(req.cookies[cur])}; `
       }, '')
     return fetch(url, {
-      ...config.proxy,
       ...init,
       headers: {
         Cookie: cookie,
-        ...config.proxy.headers,
+        ...globalRequestParams?.headers,
         ...init?.headers,
       },
     })
