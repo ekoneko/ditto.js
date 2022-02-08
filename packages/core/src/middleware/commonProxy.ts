@@ -51,10 +51,10 @@ function traverseProxyHandlers(req: Request, res: Response, next: NextFunction) 
 }
 
 export async function createCommonProxy(app: Application, config: Config) {
-  const { proxy, proxies: rawProxies } = config.get()
-  const proxies = rawProxies || [proxy!]
+  const { proxies } = config.get()
   let handlers = buildHandlers(proxies)
   config.on('change', () => {
+    const { proxies } = config.get()
     handlers = buildHandlers(proxies)
   })
   return (req: Request, res: Response, next: NextFunction) => {

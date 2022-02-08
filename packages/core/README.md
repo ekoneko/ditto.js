@@ -17,15 +17,23 @@ ditto 的配置为一个 js 文件，示例参考：
 ```js
 const createChance = require('chance')
 module.exports = {
-  proxy: {
-    target: 'https://example.com',
-    ws: true,
-    secure: false,
-    changeOrigin: true,
-    autoRewrite: true,
-    cookieDomainRewrite: '',
-  },
+  proxies: [
+    {
+      target: 'https://example.com',
+      ws: true,
+      secure: false,
+      changeOrigin: true,
+      autoRewrite: true,
+      cookieDomainRewrite: '',
+    },
+  ],
   globalContext: { chance: createChance() },
+  globalRequestParams: {
+    baseUrl: 'https://example.com',
+    headers: {
+      Token: 'xxxxx'
+    }
+  }
   rules: [
     {
       match: ['GET', '/api/0'],
@@ -39,7 +47,7 @@ module.exports = {
 }
 ```
 
-#### proxy
+#### proxies
 
 基础代理配置， 没有命中规则的请求会由这里的配置进行转发，配置参考 `http-proxy.ServerOptions`
 
@@ -50,6 +58,10 @@ module.exports = {
 #### globalContext
 
 向所有自定义规则中注入的 context
+
+#### globalRequestParams
+
+规则匹配注入的 `request` 方法默认配置
 
 ### Rule
 
@@ -101,5 +113,3 @@ request(url: string, init?: RequestInit) => Response
 ## TODO
 
 - [ ] 支持从 open-api / swagger 生成规则
-- [ ] 支持 websocket
-- [ ] 支持 SSE

@@ -16,7 +16,7 @@ export class Config extends EventEmitter {
     this.read().subscribe()
   }
   read() {
-    this.config = require(this.configPath)
+    this.readConfig()
     return this
   }
   get() {
@@ -51,7 +51,7 @@ export class Config extends EventEmitter {
     if (file !== this.configPath) {
       this.deleteCache(file)
     }
-    this.config = require(this.configPath)
+    this.readConfig()
     this.subscribe()
     this.emit('change')
   }
@@ -67,5 +67,10 @@ export class Config extends EventEmitter {
         this.deleteCache(cache.parent.id, stack++)
       }
     }
+  }
+
+  private readConfig() {
+    this.config = require(this.configPath)
+    this.config.proxies = this.config.proxies ?? this.config.proxy ? [this.config.proxy] : []
   }
 }
