@@ -12,8 +12,8 @@ export interface Config {
    */
   proxy?: ProxyOptions
   proxies?: ProxyOptions[]
-  rules: Rule[]
-  globalContext: Record<string, any>
+  rules?: Rule[]
+  globalContext?: Record<string, any>
   globalRequestParams?: {
     baseUrl: string
     headers?: Record<string, string>

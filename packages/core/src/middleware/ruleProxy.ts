@@ -49,7 +49,7 @@ function createRequest(req: Request, config: IConfig) {
 export async function createRuleProxy(app: Application, configReader: Config) {
   return function (req: Request, res: Response, next: NextFunction) {
     const config = configReader.get()
-    const rules = config.rules.reverse()
+    const rules = config.rules?.reverse() ?? []
     const matchRule = createMatchRule(req.method, req.path)
     const matchedRule = rules.find(matchRule)
     if (matchedRule?.callback) {

@@ -10,6 +10,12 @@ http 接口代理工具
 ditto /path/to/config.js
 ```
 
+### special port
+
+```
+PORT=1234 ditto /path/to/config.js
+```
+
 ### Config
 
 ditto 的配置为一个 js 文件，示例参考：
@@ -109,6 +115,58 @@ request(url: string, init?: RequestInit) => Response
 ##### log
 
 将日志输出至 ditto 执行进程中。(沙箱中的 console.log 等日志会被丢弃)
+
+## typescript 方案
+
+ditto 参数上追加 `--register=/path/to/ts-node/register`. 参考 ts-node [文档](https://github.com/TypeStrong/ts-node#programmatic)。
+
+e.g:
+
+```sh
+ditto --register=/project/node_modules/ts-node/register /project/config.ts
+```
+
+### 类型参考
+
+config.ts
+
+```ts
+import { Config } from '@ekoneko/ditto/lib/types/config'
+
+const config: Config = {
+  rules: [...require('./rules/test')],
+  globalContext: {
+    host: 'example.com',
+  },
+}
+export = config
+```
+
+rules/test.ts
+
+```ts
+import { Rule } from "@ekoneko/ditto/lib/types/rule";
+import Chance from "chance";
+
+const context = {
+  chance: new Chance(),
+}
+const ruleA: Rule<
+  // global context
+  {host: string;},
+  // context
+  typeof context
+> = {
+  match: ["GET", "/api/0"],
+  context,
+  // NOTE: can't use arrow function
+  callback: function (req, res) {
+    this.log('track something')
+    res.send(`${this.host}/${this.context.chance.name()}`)
+  }
+
+export [ruleA]
+```
 
 ## TODO
 
