@@ -71,6 +71,6 @@ export class Config extends EventEmitter {
 
   private readConfig() {
     this.config = require(this.configPath)
-    this.config.proxies = this.config.proxies ?? this.config.proxy ? [this.config.proxy] : []
+    this.config.proxies = this.config.proxies ?? (this.config.proxy ? [this.config.proxy] : [])
   }
 }
