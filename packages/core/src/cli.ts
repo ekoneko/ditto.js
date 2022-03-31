@@ -20,7 +20,8 @@ if (!cli.input[0]) {
 }
 
 if (cli.flags.register) {
-  require(cli.flags.register)
+  const register = path.isAbsolute(cli.flags.register) ? cli.flags.register : path.resolve(process.cwd(), cli.flags.register);
+  require(register);
 }
 
 const configPath = path.resolve(cli.input[0])
