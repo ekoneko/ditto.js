@@ -1,8 +1,10 @@
 # ditto.js
 
-http 接口代理工具
+一个 http 接口代理工具
 
-通过 `http-proxy` 将指定服务器代理到本地端口， 并支持简单的修改请求及响应。
+通过 `http-proxy` 将指定服务器代理到本地端口， 并支持简单的请求及响应覆写。
+
+ditto.js 可以配合 `webpack` 等工具一同使用，可以实现不重启 webpack 前提下替换代理源及 mock 数据。
 
 ## Usage
 
@@ -18,7 +20,9 @@ PORT=1234 ditto /path/to/config.js
 
 ### Config
 
-ditto 的配置为一个 js 文件，示例参考：
+ditto.js 的配置为一个 js 文件，(已支持 ts 配置, 参考下方 `typescript 方案`)
+
+示例参考：
 
 ```js
 const createChance = require('chance')
@@ -55,35 +59,52 @@ module.exports = {
 
 #### proxies
 
-基础代理配置， 没有命中规则的请求会由这里的配置进行转发，配置参考 `http-proxy.ServerOptions`
+通用代理配置，配置参考 [http-proxy.ServerOptions](https://github.com/http-party/node-http-proxy#options).
+
+同用代理会在规则代理之后执行，通常用于默认代理规则。
 
 #### rules
 
-自定义代理匹配，基于定义的 `method`, `path` 规则，以命中的规则解析响应。
+规则模式配置，参考下方 `Rule`
 
-#### globalContext
+#### globalContext (optional)
 
-向所有自定义规则中注入的 context
+向所有规则模式中提供全局数据。
 
-#### globalRequestParams
+#### globalRequestParams (optional)
 
-规则匹配注入的 `request` 方法默认配置
+规则内置 `request` 方法的自定义配置。
 
 ### Rule
+
+规则模式: 基于请求的 `method` 与 `path` 拦截并修改响应内容。规则匹配顺序与数组顺序一致 (first match first execute)。
+
+一个完整的规则配置：
+
+```js
+const rule = {
+  match: ['GET', '/api/0'],
+  callback: (req, res) => {
+    const { prefix } = context
+    res.send(`${prefix}${chance.name()}`)
+  },
+  context: { prefix: 'name: ' },
+}
+```
 
 #### rule.match
 
 规则匹配条件，格式为 `[Method, Path]`
 
-`Path` 由 `path-to-regexp` 解析。后定义的规则会优先响应。
+`Path` 由 [path-to-regexp](https://www.npmjs.com/package/path-to-regexp) 解析。
 
 #### rule.context
 
-向 callback 注入上下文， 拥有命名空间 `context`
+向 callback 注入上下文， 可以在 `rule.callback` 函数中通过 this.context 被调用。
 
 #### rule.callback
 
-处理规则的回调，格式为 `express.js` 的 RequestHandler. 即
+处理规则的回调，格式与 `express.js` RequestHandler 保持一致. 即
 
 ```
 (req, res, next) => {
@@ -91,17 +112,22 @@ module.exports = {
 }
 ```
 
-callback 会运行在一个沙箱中，不能从配置的 js 文件中直接获取外部变量， 有三种方式获取上下文（优先级由低至高）：
+需注意的是 rule.callback 运行在一个 sandbox 中， 无法访问外部变量。
 
-1. ditto 默认注入的上下文
+```js
+const outsider = 'xxxx'
+const rule = {
+  match: ['GET', '/api/0'],
+  callback: (req, res, next) => {
+    this.log(outsider) // undefined
+    next()
+  },
+}
+```
 
-2. config.globalContext
+除 `rule.context` 与 `globalContext` 外， ditto.js 会默认注入以下变量:
 
-3. rule.context
-
-默认注入上下文列表：
-
-##### request
+##### this.request
 
 实现继承自 `node-fetch`
 
@@ -110,15 +136,17 @@ import { RequestInit, Response } from 'node-fetch'
 request(url: string, init?: RequestInit) => Response
 ```
 
-请求会自动附带 cookie 及 `proxy` 中定义的 header 等设置。 如果 url 是相对路径则会拼接 `proxy.target`。
+请求会自动加载 `globalRequestParams` 定义的配置
 
-##### log
+##### this.log
 
-将日志输出至 ditto 执行进程中。(沙箱中的 console.log 等日志会被丢弃)
+将日志输出至主进程中。(沙箱中的 stdout, stderr *不会*被输出)
 
 ## typescript 方案
 
-ditto 参数上追加 `--register=/path/to/ts-node/register`. 参考 ts-node [文档](https://github.com/TypeStrong/ts-node#programmatic)。
+ditto.js 对配置提供了 typescript 支持与完整的类型定义。
+
+使用 typescript 配置时启动参数需要声明 `--register=/path/to/ts-node/register`. 参考 [ts-node 文档](https://github.com/TypeStrong/ts-node#programmatic)。
 
 e.g:
 
@@ -126,18 +154,36 @@ e.g:
 ditto --register=/project/node_modules/ts-node/register /project/config.ts
 ```
 
+使用 ditto.js 的类型需在配置文件范围内引入 ditto。 考虑到同时对 ts-node, typescript 的依赖。推荐以 npm module 的形式维护 ditto project.
+
+```json
+{
+  "name": "ditto-project",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "ditto --register ./node_modules/ts-node/register/transpile-only.js configPath.ts"
+  },
+  "dependencies": {
+    "@ekoneko/ditto": "*",
+    "ts-node": "*",
+    "typescript": "*"
+  }
+}
+```
+
 ### 类型参考
 
 config.ts
 
 ```ts
-import { Config } from '@ekoneko/ditto/lib/types/config'
+import { Config } from 'ditto.js/lib/types/config'
+import Chance from 'chance'
 
 const config: Config = {
+  proxies: [],
   rules: [...require('./rules/test')],
-  globalContext: {
-    host: 'example.com',
-  },
+  globalContext: { chance: createChance() },
 }
 export = config
 ```
@@ -145,25 +191,16 @@ export = config
 rules/test.ts
 
 ```ts
-import { Rule } from "@ekoneko/ditto/lib/types/rule";
-import Chance from "chance";
+import { makeCreateRule } from 'ditto.js/lib/utils'
 
-const context = {
-  chance: new Chance(),
-}
-const ruleA: Rule<
-  // global context
-  {host: string;},
-  // context
-  typeof context
-> = {
-  match: ["GET", "/api/0"],
-  context,
-  // NOTE: can't use arrow function
-  callback: function (req, res) {
-    this.log('track something')
-    res.send(`${this.host}/${this.context.chance.name()}`)
-  }
+const createRule = makeCreateRule<{chance: Chance}>()
+const ruleA = createRule(
+  ['GET', '/api/0'],
+  (req, res) => {
+    res.send(`${prefix}${chance.name()}`)
+  },
+  context: { prefix: 'name: ' },
+)
 
 export [ruleA]
 ```
