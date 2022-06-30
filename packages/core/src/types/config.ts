@@ -6,13 +6,13 @@ export interface ProxyOptions extends ServerOptions {
   filter?: string;
 }
 
-export interface Config {
+export interface Config<G = unknown> {
   /**
    * @deprecated: Use proxies instead.
    */
   proxy?: ProxyOptions
   proxies?: ProxyOptions[]
-  rules?: Rule[]
+  rules?: Rule<G, unknown>[]
   globalContext?: Record<string, any>
   globalRequestParams?: {
     baseUrl: string

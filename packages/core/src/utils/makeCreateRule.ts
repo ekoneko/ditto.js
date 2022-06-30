@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import fetch from 'node-fetch';
+import type { Rule } from '../types/rule';
 
 export function makeCreateRule<G = undefined>() {
   type Callback<C> = (this: {
@@ -12,6 +13,6 @@ export function makeCreateRule<G = undefined>() {
       match,
       callback,
       context,
-    }
+    } as Rule<G, C>
   }
 }
